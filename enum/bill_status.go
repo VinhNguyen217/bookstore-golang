@@ -1,0 +1,8 @@
+package enum
+
+const (
+	WAIT_CONFIRM = "WAIT_CONFIRM"
+	DELIVERY     = "DELIVERY"
+	DELIVERED    = "DELIVERED"
+	CANCELLED    = "CANCELLED"
+)
