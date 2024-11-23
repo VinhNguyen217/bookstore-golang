@@ -11,11 +11,11 @@ import (
 )
 
 type UserController interface {
-	Create(ctx *gin.Context)
-	Update(ctx *gin.Context)
-	Delete(ctx *gin.Context)
+	CreateUser(ctx *gin.Context)
+	UpdateUser(ctx *gin.Context)
 	FindById(ctx *gin.Context)
 	FindAll(ctx *gin.Context)
+	GetMyInfo(ctx *gin.Context)
 }
 
 type userCtl struct {
@@ -28,7 +28,7 @@ func NewUserController(di *do.Injector) UserController {
 	}
 }
 
-func (c *userCtl) Create(ctx *gin.Context) {
+func (c *userCtl) CreateUser(ctx *gin.Context) {
 	req := &request.UserRequest{}
 	_ = ctx.ShouldBindJSON(req)
 	user, err := c.userService.Create(req)
@@ -39,36 +39,16 @@ func (c *userCtl) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, gin.H{"data": user})
 }
 
-func (c *userCtl) Update(ctx *gin.Context) {
-	id, errId := strconv.Atoi(ctx.Param("id"))
-	if errId != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": errId.Error()})
-		return
-	}
+func (c *userCtl) UpdateUser(ctx *gin.Context) {
 	req := &request.UserRequest{}
 	_ = ctx.ShouldBind(req)
-	user, err := c.userService.Update(req, id)
+	user, err := c.userService.Update(ctx, req)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"data": user})
-}
-
-func (c *userCtl) Delete(ctx *gin.Context) {
-	id, errId := strconv.Atoi(ctx.Param("id"))
-	if errId != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": errId.Error()})
-		return
-	}
-	err := c.userService.Delete(id)
-	if err != nil {
-		fmt.Println(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Xóa thành công"})
 }
 
 func (c *userCtl) FindById(ctx *gin.Context) {
@@ -90,6 +70,15 @@ func (c *userCtl) FindAll(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	} else {
-		ctx.JSON(http.StatusOK, users)
+		ctx.JSON(http.StatusOK, gin.H{"data": users})
+	}
+}
+
+func (c *userCtl) GetMyInfo(ctx *gin.Context) {
+	user, err := c.userService.GetMyInfo(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{"data": user})
 	}
 }

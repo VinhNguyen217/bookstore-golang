@@ -2,7 +2,6 @@ package connection
 
 import (
 	"book-store/conf"
-	"book-store/model"
 	"fmt"
 	"github.com/samber/do"
 	"gorm.io/driver/mysql"
@@ -26,16 +25,16 @@ func NewMysqlConnection(di *do.Injector) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = dbOrm.AutoMigrate(
-		&model.User{},
-		&model.Book{},
-		&model.Bill{},
-		&model.BillDetail{},
-		&model.Cart{},
-	)
-	if err != nil {
-		return nil, err
-	}
+	//err = dbOrm.AutoMigrate(
+	//	&model.User{},
+	//	&model.Book{},
+	//	&model.Bill{},
+	//	&model.BillDetail{},
+	//	&model.Cart{},
+	//)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	db, err := dbOrm.DB()
 	if err != nil {

@@ -13,6 +13,7 @@ type BookRepository interface {
 	Delete(id int) error
 	FindAll() ([]model.Book, error)
 	FindById(id int) (*model.Book, error)
+	FindByName(name string) (*model.Book, error)
 }
 
 type bookRepo struct {
@@ -58,4 +59,16 @@ func (r *bookRepo) Update(book *model.Book) error {
 func (r *bookRepo) Delete(id int) error {
 	var book model.Book
 	return r.db.Where("id = ?", id).Delete(&book).Error
+}
+
+func (r *bookRepo) FindByName(name string) (*model.Book, error) {
+	var book model.Book
+	err := r.db.Model(&model.Book{}).
+		Where("name = ?", name).
+		First(&book).Error
+	if err != nil {
+		return nil, errors.New("Sách này không tồn tại")
+	} else {
+		return &book, nil
+	}
 }

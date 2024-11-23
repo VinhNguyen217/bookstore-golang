@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"book-store/cmd/api"
+	"book-store/cmd/migrate"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 func init() {
 	rootCmd.AddCommand(api.Cmd)
+	rootCmd.AddCommand(migrate.Cmd)
 }
 
 var rootCmd = &cobra.Command{

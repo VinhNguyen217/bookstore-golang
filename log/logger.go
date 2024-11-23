@@ -2,11 +2,8 @@ package log
 
 import (
 	"book-store/enum"
-	"go.uber.org/zap"
-)
-
-import (
 	"context"
+	"go.uber.org/zap"
 )
 
 var logger *zap.Logger

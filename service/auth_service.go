@@ -2,8 +2,10 @@ package service
 
 import (
 	"book-store/dto"
+	"book-store/log"
 	"book-store/repository"
 	"book-store/utils"
+	"context"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/samber/do"
@@ -12,7 +14,7 @@ import (
 )
 
 type AuthService interface {
-	PasswordLogin(req *dto.PasswordLoginRequest) (*dto.LoginResponse, error)
+	PasswordLogin(ctx context.Context, req *dto.PasswordLoginRequest) (*dto.LoginResponse, error)
 }
 
 type authServiceImpl struct {
@@ -27,7 +29,7 @@ func newAuthService(di *do.Injector) (AuthService, error) {
 	}, nil
 }
 
-func (s *authServiceImpl) PasswordLogin(req *dto.PasswordLoginRequest) (*dto.LoginResponse, error) {
+func (s *authServiceImpl) PasswordLogin(ctx context.Context, req *dto.PasswordLoginRequest) (*dto.LoginResponse, error) {
 	user, err := s.userRepo.FindByUserName(req.Username)
 	if err != nil {
 		return nil, err
@@ -45,20 +47,21 @@ func (s *authServiceImpl) PasswordLogin(req *dto.PasswordLoginRequest) (*dto.Log
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 		},
 		UserName: user.Username,
-		UserID:   user.ID,
-		Role:     user.Role,
+		Name:     user.Name,
+		UserId:   user.ID,
+		Role:     user.Role.String(),
 	}
 
 	accessToken, err := s.jwtUtil.GenerateToken(&claims)
 	if err != nil {
-		//log.Errorw(ctx, "error when generating token for user", "err", err)
+		log.Errorw(ctx, "Error when generating token for user : ", err)
 		return nil, err
 	}
 
 	return &dto.LoginResponse{
 		Meta: &dto.Meta{
 			Code:    http.StatusOK,
-			Message: "success",
+			Message: "Login success",
 		},
 		Data: &dto.Token{
 			AccessToken: accessToken,

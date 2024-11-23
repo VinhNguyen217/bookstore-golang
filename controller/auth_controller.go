@@ -25,7 +25,7 @@ func NewAuthController(di *do.Injector) AuthController {
 func (c *authCtl) PasswordLogin(ctx *gin.Context) {
 	req := &dto.PasswordLoginRequest{}
 	_ = ctx.ShouldBind(req)
-	resp, err := c.authService.PasswordLogin(req)
+	resp, err := c.authService.PasswordLogin(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, err.Error())
 		return

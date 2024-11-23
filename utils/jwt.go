@@ -61,7 +61,6 @@ func (h *jwtUtil) GenerateToken(claims jwt.Claims) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return str, nil
 }
 

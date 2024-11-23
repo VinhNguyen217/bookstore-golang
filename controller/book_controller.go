@@ -41,7 +41,7 @@ func (c *bookCtl) Create(ctx *gin.Context) {
 func (c *bookCtl) Update(ctx *gin.Context) {
 	id, errId := strconv.Atoi(ctx.Param("id"))
 	if errId != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": errId.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": "Id không hợp lệ"})
 		return
 	}
 	req := &request.BookRequest{}

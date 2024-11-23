@@ -24,21 +24,30 @@ func InitRouter(di *do.Injector) (*gin.Engine, error) {
 	billController := controller.NewBillController(di)
 
 	authGroup := v1.Group("/auth")
-	authGroup.POST("/login", authController.PasswordLogin)
-	authGroup.POST("/sign-in", userController.Create)
+	authGroup.POST("/sign-in", authController.PasswordLogin)
+	authGroup.POST("/sign-up", userController.CreateUser)
 
-	v1.GET("/books/:id", bookController.FindById)
-	v1.Use(middlewares.Auth(di)).POST("/books", bookController.Create)
-	v1.GET("/books", bookController.FindAll)
-	v1.PUT("/books/:id", bookController.Update)
-	v1.DELETE("/books/:id", bookController.Delete)
+	v1.Use(middlewares.Auth(di)).
+		GET("/users/my-info", middlewares.Authorization(di), userController.GetMyInfo)
+	v1.Use(middlewares.Auth(di)).
+		GET("/users", middlewares.Authorization(di), userController.FindAll)
+	v1.Use(middlewares.Auth(di)).
+		PUT("/users", middlewares.Authorization(di), userController.UpdateUser)
 
-	v1.GET("/users/:id", userController.FindById)
-	v1.GET("/users", userController.FindAll)
-	v1.PUT("/users/:id", userController.Update)
-	v1.DELETE("/users/:id", userController.Delete)
+	bookGroup := v1.Group("/books")
+	bookGroup.Use(middlewares.Auth(di))
+	bookGroup.POST("", middlewares.Authorization(di), bookController.Create)
+	bookGroup.PUT("/:id", middlewares.Authorization(di), bookController.Update)
+	bookGroup.DELETE("/:id", middlewares.Authorization(di), bookController.Delete)
+	bookGroup.GET("/:id", bookController.FindById)
+	bookGroup.GET("", bookController.FindAll)
 
-	v1.POST("/carts", cartController.Create) // create cart
+	cartGroup := v1.Group("/carts")
+	cartGroup.Use(middlewares.Auth(di))
+	cartGroup.POST("", middlewares.Authorization(di), cartController.Create)
+	cartGroup.PUT("", middlewares.Authorization(di), cartController.Update)
+	cartGroup.GET("", middlewares.Authorization(di), cartController.GetCartsByUserId)
+	cartGroup.DELETE("/:id", middlewares.Authorization(di), cartController.DeleteCartById)
 
 	v1.POST("/bills", billController.Create)
 

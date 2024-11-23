@@ -10,6 +10,7 @@ import (
 type CartRepository interface {
 	Create(cart *model.Cart) (*model.Cart, error)
 	FindByUserIdAndBookId(userId int, bookId int) *model.Cart
+	FindByUserIdAndCartId(userId int, cartId int) *model.Cart
 	FindByUserId(userId int) []model.Cart
 	FindById(id int) (*model.Cart, error)
 	DeleteById(id int) error
@@ -67,4 +68,16 @@ func (c cartRepo) DeleteById(id int) error {
 
 func (c cartRepo) Update(cart *model.Cart) error {
 	return c.db.Updates(cart).Error
+}
+
+func (c cartRepo) FindByUserIdAndCartId(userId int, cartId int) *model.Cart {
+	var cart model.Cart
+	c.db.Model(&model.Cart{}).
+		Where("user_id = ? AND id = ?", userId, cartId).
+		Find(&cart)
+	if cart.ID == 0 {
+		return nil
+	} else {
+		return &cart
+	}
 }

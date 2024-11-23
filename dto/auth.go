@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"book-store/enum"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -17,9 +16,10 @@ type Token struct {
 
 type JwtClaims struct {
 	jwt.RegisteredClaims
-	UserID   int       `json:"userId"`
-	UserName string    `json:"username"`
-	Role     enum.Role `json:"role"`
+	UserId   int    `json:"userId"`
+	Name     string `json:"name"`
+	UserName string `json:"username"`
+	Role     string `json:"role"`
 }
 
 type PasswordLoginRequest struct {

@@ -6,6 +6,7 @@ import (
 	"book-store/repository"
 	"errors"
 	"github.com/samber/do"
+	"strings"
 	"time"
 )
 
@@ -28,13 +29,22 @@ func newBookService(di *do.Injector) (BookService, error) {
 }
 
 func (bookService *bookServiceImpl) Create(req *request.BookRequest) (*model.Book, error) {
+	if strings.TrimSpace(req.Name) == "" {
+		return nil, errors.New("Yêu cầu nhập tên sách")
+	}
+	if req.Price == 0 {
+		return nil, errors.New("Yêu cầu nhập giá tiền")
+	}
+	bookExist, _ := bookService.bookRepo.FindByName(req.Name)
+	if bookExist != nil {
+		return nil, errors.New("Tên sách đã tồn tại")
+	}
 	date, err := time.Parse("2006-01-02", req.PublishDate)
 	if err != nil {
 		return nil, err
 	}
 	book := &model.Book{
 		Name:        req.Name,
-		Photo:       req.Photo,
 		Quantity:    req.Quantity,
 		Price:       req.Price,
 		PublishDate: date,
@@ -44,25 +54,33 @@ func (bookService *bookServiceImpl) Create(req *request.BookRequest) (*model.Boo
 }
 
 func (bookService *bookServiceImpl) Update(req *request.BookRequest, id int) (*model.Book, error) {
-	_, errId := bookService.bookRepo.FindById(id)
+	bookExisted, errId := bookService.bookRepo.FindById(id)
 	if errId != nil {
 		return nil, errors.New("Sách này không tồn tại")
 	}
-
+	// validate
+	nameReq := req.Name
+	if strings.TrimSpace(nameReq) != "" {
+		bookExisted.Name = nameReq
+	}
+	quantityReq := req.Quantity
+	if quantityReq != 0 {
+		bookExisted.Quantity = quantityReq
+	}
+	priceReq := req.Price
+	if priceReq != 0 {
+		bookExisted.Price = priceReq
+	}
 	var date time.Time
 	if req.PublishDate != "" {
 		date, _ = time.Parse("2006-01-02", req.PublishDate)
+		bookExisted.PublishDate = date
 	}
-	book := &model.Book{
-		ID:          id,
-		Name:        req.Name,
-		Photo:       req.Photo,
-		Quantity:    req.Quantity,
-		Price:       req.Price,
-		PublishDate: date,
-		Description: req.Description,
+	descriptionReq := req.Description
+	if descriptionReq != "" {
+		bookExisted.Description = descriptionReq
 	}
-	err := bookService.bookRepo.Update(book)
+	err := bookService.bookRepo.Update(bookExisted)
 	if err != nil {
 		return nil, err
 	} else {

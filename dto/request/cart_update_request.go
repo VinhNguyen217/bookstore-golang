@@ -1,6 +1,6 @@
 package request
 
-type CartUpdateRequest struct {
-	id       int `json:"id"`
-	quantity int `json:"quantity"`
+type CartItemUpdateRequest struct {
+	CartId   int `json:"cartId"`
+	Quantity int `json:"quantity"`
 }

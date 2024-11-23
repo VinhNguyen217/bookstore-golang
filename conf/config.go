@@ -7,6 +7,9 @@ import (
 )
 
 type Config struct {
+	ApiService struct {
+		Port int64 `envconfig:"API_PORT"`
+	}
 	MYSQL struct {
 		Host            string `envconfig:"MYSQL_HOST"`
 		Port            int64  `envconfig:"MYSQL_PORT"`

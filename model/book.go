@@ -7,7 +7,6 @@ import (
 type Book struct {
 	ID          int       `gorm:"primaryKey"`
 	Name        string    `gorm:"column:name"`
-	Photo       string    `gorm:"column:photo"`
 	Quantity    int       `gorm:"column:quantity"`
 	Sold        int       `gorm:"column:sold"`
 	Price       int       `gorm:"column:price"`

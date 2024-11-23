@@ -11,6 +11,7 @@ import (
 
 type CartController interface {
 	Create(ctx *gin.Context)
+	Update(ctx *gin.Context)
 	GetCartsByUserId(ctx *gin.Context)
 	DeleteCartById(ctx *gin.Context)
 }
@@ -28,7 +29,7 @@ func NewCartController(di *do.Injector) CartController {
 func (c *cartCtl) Create(ctx *gin.Context) {
 	req := &request.CartItemRequest{}
 	_ = ctx.ShouldBindJSON(req)
-	cart, err := c.cartService.Create(req)
+	cart, err := c.cartService.Create(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -36,13 +37,19 @@ func (c *cartCtl) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, cart)
 }
 
-func (c *cartCtl) GetCartsByUserId(ctx *gin.Context) {
-	userId, errId := strconv.Atoi(ctx.Param("userId"))
-	if errId != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"message": errId.Error()})
+func (c *cartCtl) Update(ctx *gin.Context) {
+	req := &request.CartItemUpdateRequest{}
+	_ = ctx.ShouldBindJSON(req)
+	cart, err := c.cartService.Update(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	carts := c.cartService.GetCartsByUserId(userId)
+	ctx.JSON(http.StatusOK, gin.H{"data": cart})
+}
+
+func (c *cartCtl) GetCartsByUserId(ctx *gin.Context) {
+	carts := c.cartService.GetCartsByUserId(ctx)
 	ctx.JSON(http.StatusOK, carts)
 }
 
@@ -52,10 +59,10 @@ func (c *cartCtl) DeleteCartById(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": errId.Error()})
 		return
 	}
-	err := c.cartService.DeleteById(id)
+	err := c.cartService.DeleteById(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{"message": "Xóa thành công sản phẩm"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Xóa thành công giỏ hàng"})
 }

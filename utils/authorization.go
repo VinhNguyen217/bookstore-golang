@@ -2,6 +2,8 @@ package utils
 
 import (
 	"book-store/conf"
+	"book-store/log"
+	"context"
 	"fmt"
 	"github.com/casbin/casbin/v2"
 	gormAdapter "github.com/casbin/gorm-adapter/v3"
@@ -21,10 +23,9 @@ func NewEnforcer(di *do.Injector) (*Enforcer, error) {
 		return nil, err
 	}
 
-	//e, err := casbin.NewEnforcer(cf.Casbin.RBACModelPath, cf.Casbin.RBACPolicyPath)
 	e, err := casbin.NewEnforcer(cf.Casbin.RBACModelPath, adapter)
 	if err != nil {
-		//log.Errorw(context.Background(), "error when init casbin", "err", err)
+		log.Errorw(context.Background(), "error when init casbin", "err", err)
 		panic(err)
 	}
 	err = e.LoadPolicy()

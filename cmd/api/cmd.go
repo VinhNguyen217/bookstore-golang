@@ -3,10 +3,12 @@ package api
 import (
 	"book-store/conf"
 	"book-store/connection"
+	"book-store/log"
 	"book-store/repository"
 	"book-store/router"
 	"book-store/service"
 	"book-store/utils"
+	"context"
 	"fmt"
 	"github.com/samber/do"
 	"github.com/spf13/cobra"
@@ -36,6 +38,9 @@ func startApi() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("start api server at : 8088")
-	_ = r.Run(":8088")
+
+	cf := do.MustInvoke[*conf.Config](injector)
+	addr := fmt.Sprintf(":%v", cf.ApiService.Port)
+	log.Infow(context.Background(), fmt.Sprintf("start api server at %v", addr))
+	_ = r.Run(addr)
 }

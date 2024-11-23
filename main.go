@@ -2,7 +2,9 @@ package main
 
 import (
 	"book-store/cmd"
-	"go.uber.org/zap"
+	"book-store/log"
+	"context"
+	"fmt"
 	"os"
 )
 
@@ -11,6 +13,6 @@ func init() {
 
 func main() {
 	pid := os.Getpid()
-	zap.S().Infof("Process ID: %v", pid)
+	log.Infow(context.Background(), fmt.Sprintf("Process ID: %v", pid))
 	cmd.Execute()
 }
