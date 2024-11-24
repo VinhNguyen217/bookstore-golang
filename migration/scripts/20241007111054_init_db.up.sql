@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS book;
 DROP TABLE IF EXISTS user;
-DROP TABLE IF EXISTS bill;
+DROP TABLE IF EXISTS bills;
 DROP TABLE IF EXISTS cart;
 DROP TABLE IF EXISTS bill_detail;
 
@@ -43,9 +43,10 @@ CREATE TABLE `cart`
     PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `bill`
+CREATE TABLE `bills`
 (
     `id`           bigint NOT NULL AUTO_INCREMENT,
+    `user_id`      bigint NOT NULL,
     `receiver`     longtext,
     `phone`        longtext,
     `address`      longtext,

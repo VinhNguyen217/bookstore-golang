@@ -6,6 +6,7 @@ import (
 
 type Bill struct {
 	ID          int       `gorm:"primaryKey"`
+	UserId      int       `gorm:"user_id"`
 	Receiver    string    `gorm:"column:receiver"`
 	Phone       string    `gorm:"column:phone"`
 	Address     string    `gorm:"column:address"`
@@ -20,5 +21,5 @@ type Bill struct {
 }
 
 func (Bill) tableName() string {
-	return "bill"
+	return "bills"
 }

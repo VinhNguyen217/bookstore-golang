@@ -49,7 +49,11 @@ func InitRouter(di *do.Injector) (*gin.Engine, error) {
 	cartGroup.GET("", middlewares.Authorization(di), cartController.GetCartsByUserId)
 	cartGroup.DELETE("/:id", middlewares.Authorization(di), cartController.DeleteCartById)
 
-	v1.POST("/bills", billController.Create)
+	billGroup := v1.Group("/bills")
+	billGroup.Use(middlewares.Auth(di))
+	billGroup.POST("", middlewares.Authorization(di), billController.Create)
+	billGroup.PUT("/cancel/:id", middlewares.Authorization(di), billController.CancelBill)
+	billGroup.PUT("/update-status/:id", middlewares.Authorization(di), billController.UpdateStatusBill)
 
 	return r, nil
 }

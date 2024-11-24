@@ -2,12 +2,16 @@ package repository
 
 import (
 	"book-store/model"
+	"errors"
 	"github.com/samber/do"
 	"gorm.io/gorm"
 )
 
 type BillRepository interface {
 	Create(bill *model.Bill) (*model.Bill, error)
+	FindByIdAndUserId(id, userId int) (*model.Bill, error)
+	Update(bill *model.Bill) error
+	FindById(id int) (*model.Bill, error)
 }
 
 type billRepo struct {
@@ -22,4 +26,32 @@ func newBillRepository(di *do.Injector) (BillRepository, error) {
 func (r billRepo) Create(bill *model.Bill) (*model.Bill, error) {
 	err := r.db.Create(bill).Error
 	return bill, err
+}
+
+func (r billRepo) FindByIdAndUserId(id, userId int) (*model.Bill, error) {
+	var bill model.Bill
+	r.db.Model(&model.Bill{}).
+		Where("user_id = ? AND id = ?", userId, id).
+		Find(&bill)
+	if bill.ID == 0 {
+		return nil, errors.New("Đơn hàng không tồn tại")
+	} else {
+		return &bill, nil
+	}
+}
+
+func (r billRepo) Update(bill *model.Bill) error {
+	return r.db.Save(bill).Error
+}
+
+func (r billRepo) FindById(id int) (*model.Bill, error) {
+	var bill model.Bill
+	err := r.db.Model(&model.Bill{}).
+		Where("id = ?", id).
+		First(&bill).Error
+	if err != nil {
+		return nil, errors.New("Đơn hàng này không tồn tại")
+	} else {
+		return &bill, nil
+	}
 }

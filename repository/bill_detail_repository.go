@@ -8,6 +8,7 @@ import (
 
 type BillDetailRepository interface {
 	Create(billDetail *model.BillDetail) (*model.BillDetail, error)
+	FindByBillId(billId int) []model.BillDetail
 }
 
 type billDetailRepo struct {
@@ -22,4 +23,10 @@ func newBillDetailRepository(di *do.Injector) (BillDetailRepository, error) {
 func (r billDetailRepo) Create(billDetail *model.BillDetail) (*model.BillDetail, error) {
 	err := r.db.Create(billDetail).Error
 	return billDetail, err
+}
+
+func (r billDetailRepo) FindByBillId(billId int) []model.BillDetail {
+	var billDetails []model.BillDetail
+	r.db.Where("bill_id = ?", billId).Find(&billDetails)
+	return billDetails
 }

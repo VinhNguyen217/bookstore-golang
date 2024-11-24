@@ -2,8 +2,10 @@ package service
 
 import (
 	"book-store/dto/request"
+	"book-store/dto/response"
 	"book-store/model"
 	"book-store/repository"
+	"book-store/utils"
 	"errors"
 	"github.com/samber/do"
 	"strings"
@@ -11,11 +13,11 @@ import (
 )
 
 type BookService interface {
-	Create(book *request.BookRequest) (*model.Book, error)
-	Update(book *request.BookRequest, id int) (*model.Book, error)
+	Create(book *request.BookRequest) (*response.BookRes, error)
+	Update(book *request.BookRequest, id int) (*response.BookRes, error)
 	Delete(id int) error
-	FindById(id int) (*model.Book, error)
-	FindAll() ([]model.Book, error)
+	FindById(id int) (*response.BookRes, error)
+	FindAll() ([]response.BookRes, error)
 }
 
 type bookServiceImpl struct {
@@ -28,7 +30,7 @@ func newBookService(di *do.Injector) (BookService, error) {
 	}, nil
 }
 
-func (bookService *bookServiceImpl) Create(req *request.BookRequest) (*model.Book, error) {
+func (bookService *bookServiceImpl) Create(req *request.BookRequest) (*response.BookRes, error) {
 	if strings.TrimSpace(req.Name) == "" {
 		return nil, errors.New("Yêu cầu nhập tên sách")
 	}
@@ -50,10 +52,15 @@ func (bookService *bookServiceImpl) Create(req *request.BookRequest) (*model.Boo
 		PublishDate: date,
 		Description: req.Description,
 	}
-	return bookService.bookRepo.Create(book)
+	_, bookErr := bookService.bookRepo.Create(book)
+	if bookErr != nil {
+		return nil, bookErr
+	} else {
+		return convertBook(book), nil
+	}
 }
 
-func (bookService *bookServiceImpl) Update(req *request.BookRequest, id int) (*model.Book, error) {
+func (bookService *bookServiceImpl) Update(req *request.BookRequest, id int) (*response.BookRes, error) {
 	bookExisted, errId := bookService.bookRepo.FindById(id)
 	if errId != nil {
 		return nil, errors.New("Sách này không tồn tại")
@@ -84,7 +91,7 @@ func (bookService *bookServiceImpl) Update(req *request.BookRequest, id int) (*m
 	if err != nil {
 		return nil, err
 	} else {
-		return bookService.bookRepo.FindById(id)
+		return convertBook(bookExisted), nil
 	}
 }
 
@@ -96,10 +103,35 @@ func (bookService *bookServiceImpl) Delete(id int) error {
 	return bookService.bookRepo.Delete(id)
 }
 
-func (bookService *bookServiceImpl) FindAll() ([]model.Book, error) {
-	return bookService.bookRepo.FindAll()
+func (bookService *bookServiceImpl) FindAll() ([]response.BookRes, error) {
+	books, err := bookService.bookRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+	var bookResList []response.BookRes
+	for _, book := range books {
+		bookRes := convertBook(&book)
+		bookResList = append(bookResList, *bookRes)
+	}
+	return bookResList, nil
 }
 
-func (bookService *bookServiceImpl) FindById(id int) (*model.Book, error) {
-	return bookService.bookRepo.FindById(id)
+func (bookService *bookServiceImpl) FindById(id int) (*response.BookRes, error) {
+	book, err := bookService.bookRepo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+	return convertBook(book), nil
+}
+
+func convertBook(book *model.Book) *response.BookRes {
+	return &response.BookRes{
+		Id:          book.ID,
+		Name:        book.Name,
+		Quantity:    book.Quantity,
+		Sold:        book.Sold,
+		Price:       utils.ConvertToVND(book.Price),
+		PublishDate: book.PublishDate,
+		Description: book.Description,
+	}
 }

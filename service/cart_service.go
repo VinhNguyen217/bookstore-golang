@@ -2,18 +2,20 @@ package service
 
 import (
 	"book-store/dto/request"
+	"book-store/dto/response"
 	"book-store/model"
 	"book-store/repository"
+	"book-store/utils"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/do"
 )
 
 type CartService interface {
-	Create(ctx *gin.Context, request *request.CartItemRequest) (*model.Cart, error)
-	GetCartsByUserId(ctx *gin.Context) []model.Cart
+	Create(ctx *gin.Context, request *request.CartItemRequest) (*response.CartRes, error)
+	GetCartsByUserId(ctx *gin.Context) []response.CartRes
 	DeleteById(ctx *gin.Context, id int) error
-	Update(ctx *gin.Context, request *request.CartItemUpdateRequest) (*model.Cart, error)
+	Update(ctx *gin.Context, request *request.CartItemUpdateRequest) (*response.CartRes, error)
 }
 
 type cartServiceImpl struct {
@@ -30,7 +32,7 @@ func newCartService(di *do.Injector) (CartService, error) {
 	}, nil
 }
 
-func (c cartServiceImpl) Create(ctx *gin.Context, req *request.CartItemRequest) (*model.Cart, error) {
+func (c cartServiceImpl) Create(ctx *gin.Context, req *request.CartItemRequest) (*response.CartRes, error) {
 	bookId := req.BookId
 	quantity := req.Quantity
 	if bookId == 0 {
@@ -52,20 +54,31 @@ func (c cartServiceImpl) Create(ctx *gin.Context, req *request.CartItemRequest) 
 	}
 	cartExisted := c.cartRepo.FindByUserIdAndBookId(userId, bookId)
 	if cartExisted != nil {
-		return cartExisted, errors.New("Sản phẩm này đã có trong giỏ hàng")
+		return nil, errors.New("Sản phẩm này đã có trong giỏ hàng")
 	}
 	cartNew := &model.Cart{
 		UserID:   userId,
 		BookID:   req.BookId,
-		Quantity: req.Quantity,
-		Price:    bookExisted.Price,
+		Quantity: quantity,
+		Price:    bookExisted.Price * quantity,
 	}
-	return c.cartRepo.Create(cartNew)
+	_, cartErr := c.cartRepo.Create(cartNew)
+	if cartErr != nil {
+		return nil, cartErr
+	} else {
+		return convertCart(cartNew), nil
+	}
 }
 
-func (c cartServiceImpl) GetCartsByUserId(ctx *gin.Context) []model.Cart {
+func (c cartServiceImpl) GetCartsByUserId(ctx *gin.Context) []response.CartRes {
 	userId := ctx.GetInt("user_id")
-	return c.cartRepo.FindByUserId(userId)
+	carts := c.cartRepo.FindByUserId(userId)
+	var cartResList []response.CartRes
+	for _, cart := range carts {
+		cartRes := convertCart(&cart)
+		cartResList = append(cartResList, *cartRes)
+	}
+	return cartResList
 }
 
 func (c cartServiceImpl) DeleteById(ctx *gin.Context, id int) error {
@@ -77,7 +90,7 @@ func (c cartServiceImpl) DeleteById(ctx *gin.Context, id int) error {
 	return c.cartRepo.DeleteById(id)
 }
 
-func (c cartServiceImpl) Update(ctx *gin.Context, req *request.CartItemUpdateRequest) (*model.Cart, error) {
+func (c cartServiceImpl) Update(ctx *gin.Context, req *request.CartItemUpdateRequest) (*response.CartRes, error) {
 	cartId := req.CartId
 	if cartId == 0 {
 		return nil, errors.New("Yêu cầu nhập id giỏ hàng")
@@ -93,12 +106,23 @@ func (c cartServiceImpl) Update(ctx *gin.Context, req *request.CartItemUpdateReq
 		return nil, errors.New("Số lượng mua không được phép vượt quá số lượng sản phẩm hiện có")
 	}
 	if quantityReq == 0 {
-		quantityReq = cartExisted.Quantity
+		return convertCart(cartExisted), nil
 	}
+	priceNew := (cartExisted.Price / cartExisted.Quantity) * quantityReq
 	cartExisted.Quantity = quantityReq
+	cartExisted.Price = priceNew
 	err := c.cartRepo.Update(cartExisted)
 	if err != nil {
 		return nil, err
 	}
-	return cartExisted, nil
+	return convertCart(cartExisted), nil
+}
+
+func convertCart(cart *model.Cart) *response.CartRes {
+	return &response.CartRes{
+		ID:       cart.ID,
+		BookID:   cart.BookID,
+		Quantity: cart.Quantity,
+		Price:    utils.ConvertToVND(cart.Price),
+	}
 }
