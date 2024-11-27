@@ -54,6 +54,8 @@ func InitRouter(di *do.Injector) (*gin.Engine, error) {
 	billGroup.POST("", middlewares.Authorization(di), billController.Create)
 	billGroup.PUT("/cancel/:id", middlewares.Authorization(di), billController.CancelBill)
 	billGroup.PUT("/update-status/:id", middlewares.Authorization(di), billController.UpdateStatusBill)
+	billGroup.GET("/user", middlewares.Authorization(di), billController.FindByUser)
+	billGroup.GET("", middlewares.Authorization(di), billController.FindAll)
 
 	return r, nil
 }

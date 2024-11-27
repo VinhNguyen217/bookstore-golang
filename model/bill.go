@@ -16,8 +16,8 @@ type Bill struct {
 	Status      string    `gorm:"column:status"` // Trạng thái đơn hàng
 	Payment     string    `gorm:"column:payment"`
 	ConfirmDate time.Time `gorm:"column:confirm_date"`
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	CreatedDate time.Time `gorm:"column:created_date"`
+	UpdatedDate time.Time `gorm:"column:updated_date"`
 }
 
 func (Bill) tableName() string {

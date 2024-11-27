@@ -34,6 +34,9 @@ func startApi() {
 	service.Inject(injector)
 	repository.Inject(injector)
 
+	//validate := validator.New()
+	//err := validate.RegisterValidation()
+
 	r, err := router.InitRouter(injector)
 	if err != nil {
 		panic(err)

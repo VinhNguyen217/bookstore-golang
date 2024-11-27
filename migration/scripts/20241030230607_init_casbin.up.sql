@@ -11,15 +11,19 @@ CREATE TABLE `casbin_rule`
     PRIMARY KEY (`id`)
 );
 
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'USER', '/api/v1/auth/sign-in', 'POST');
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'admin', '/api/v1/books', 'PUT');
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'admin', '/api/v1/books', 'GET');
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'user', '/api/v1/books', 'GET');
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'user', '/api/v1/carts', 'POST');
--- INSERT INTO casbin_rule(ptype, v0, v1, v2)
--- VALUES ('p', 'user', '/api/v1/carts', 'PUT');
+INSERT INTO casbin_rule(ptype, v0, v1, v2)
+VALUES ('p', 'USER', '/api/v1/users', 'PUT'),
+       ('p', 'ADMIN', '/api/v1/users', 'GET'),
+       ('p', 'USER', '/api/v1/users/my-info', 'GET'),
+       ('p', 'ADMIN', '/api/v1/books', 'POST'),
+       ('p', 'ADMIN', '/api/v1/books/*', 'PUT'),
+       ('p', 'ADMIN', '/api/v1/books/*', 'DELETE'),
+       ('p', 'USER', '/api/v1/carts', 'POST'),
+       ('p', 'USER', '/api/v1/carts', 'PUT'),
+       ('p', 'USER', '/api/v1/carts', 'GET'),
+       ('p', 'USER', '/api/v1/carts/*', 'DELETE'),
+       ('p', 'USER', '/api/v1/bills', 'POST'),
+       ('p', 'USER', '/api/v1/bills/cancel/*', 'PUT'),
+       ('p', 'ADMIN', '/api/v1/bills/update-status/*', 'PUT'),
+       ('p', 'USER', '/api/v1/bills/user', 'GET'),
+       ('p', 'ADMIN', '/api/v1/bills', 'GET');

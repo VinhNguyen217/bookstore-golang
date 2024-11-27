@@ -17,7 +17,7 @@ const (
 )
 
 type UserService interface {
-	Create(user *request.UserRequest) (*model.User, error)
+	CreateUser(user *request.UserRequest) (*model.User, error)
 	Update(ctx *gin.Context, user *request.UserRequest) (*model.User, error)
 	FindByID(id int) (*model.User, error)
 	FindAll() ([]model.User, error)
@@ -34,7 +34,7 @@ func newUserService(di *do.Injector) (UserService, error) {
 	}, nil
 }
 
-func (s *userServiceImpl) Create(req *request.UserRequest) (*model.User, error) {
+func (s *userServiceImpl) CreateUser(req *request.UserRequest) (*model.User, error) {
 	if strings.TrimSpace(req.Username) == "" {
 		return nil, errors.New("username is required")
 	}

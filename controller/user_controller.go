@@ -31,7 +31,7 @@ func NewUserController(di *do.Injector) UserController {
 func (c *userCtl) CreateUser(ctx *gin.Context) {
 	req := &request.UserRequest{}
 	_ = ctx.ShouldBindJSON(req)
-	user, err := c.userService.Create(req)
+	user, err := c.userService.CreateUser(req)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return

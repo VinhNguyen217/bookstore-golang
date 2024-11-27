@@ -56,8 +56,8 @@ CREATE TABLE `bills`
     `status`       longtext,
     `payment`      longtext,
     `confirm_date` datetime(3) DEFAULT NULL,
-    `created_at`   datetime(3) DEFAULT NULL,
-    `updated_at`   datetime(3) DEFAULT NULL,
+    `created_date`   datetime(3) DEFAULT NULL,
+    `updated_date`   datetime(3) DEFAULT NULL,
     PRIMARY KEY (`id`)
 );
 CREATE TABLE `bill_detail`
@@ -79,3 +79,15 @@ VALUES ('Admin', 'admin',
         'ADMIN',
         '2024-11-21 17:15:20.910',
     '2024-11-21 17:15:20.910');
+
+INSERT INTO book(name, quantity, price, publish_date, description)
+VALUES ('Dế mèn phiêu lưu ký', 30, 50000, '2020-01-01 00:00:00.000', 'Sách văn học'),
+       ('Lặng lẽ Sa Pa', 20, 100000, '2020-01-01 00:00:00.000', 'Sách văn học'),
+       ('Số đỏ ', 30, 50000, '2020-01-01 00:00:00.000', 'Sách văn học'),
+       ('Khởi nghiệp công nghệ', 30, 350000, '2020-01-01 00:00:00.000', 'Sách công nghệ'),
+       ('Cuộc chiến công nghệ số', 30, 95000, '2020-01-01 00:00:00.000', 'Sách công nghệ'),
+       ('Những đế chế công nghệ', 30, 125000, '2020-01-01 00:00:00.000', 'Sách công nghệ'),
+       ('Nền kinh tế tự do', 50, 120000, '2020-01-01 00:00:00.000', 'Sách kinh tế'),
+       ('Kinh tế vĩ mô', 50, 87500, '2020-01-01 00:00:00.000', 'Sách kinh tế'),
+       ('Lược sử kinh tế học', 50, 90000, '2020-01-01 00:00:00.000', 'Sách kinh tế'),
+       ('Cách nền kinh tế vận hành', 50, 135000, '2020-01-01 00:00:00.000', 'Sách kinh tế');

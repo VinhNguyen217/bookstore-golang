@@ -16,7 +16,9 @@ import (
 type BillService interface {
 	Create(ctx *gin.Context, bill *request.BillRequest) (*response.BillRes, error)
 	CancelBill(ctx *gin.Context, id int) (*response.BillRes, error)
-	UpdateStatus(ctx *gin.Context, id int, billStatus *request.BillStatusRequest) (*response.BillRes, error)
+	UpdateStatus(id int, billStatus *request.BillStatusRequest) (*response.BillRes, error)
+	FindAllByUserId(ctx *gin.Context) ([]response.BillRes, error)
+	FindAll() ([]response.BillRes, error)
 }
 
 type billServiceImpl struct {
@@ -64,10 +66,14 @@ func (r billServiceImpl) Create(ctx *gin.Context, req *request.BillRequest) (*re
 		Total:    total,
 		ConfirmDate: time.Date(0001, 2, 1,
 			00, 00, 00, 00, time.UTC),
+		CreatedDate: time.Now(),
+		UpdatedDate: time.Date(0001, 2, 1,
+			00, 00, 00, 00, time.UTC),
 		Status:  enum.WAIT_CONFIRM,
 		Payment: enum.CASH,
 	}
 	_, err := r.billRepo.Create(bill)
+	var billDetails []response.BillDetailRes
 	if err != nil {
 		return nil, err
 	} else {
@@ -80,14 +86,25 @@ func (r billServiceImpl) Create(ctx *gin.Context, req *request.BillRequest) (*re
 				Price:    cart.Price,
 			}
 			_, err := r.billDetailRepo.Create(billDetail)
+			book, _ := r.bookRepo.FindById(cart.BookID)
+			billDetailRes := response.BillDetailRes{
+				ID:        billDetail.ID,
+				BookID:    billDetail.BookID,
+				BookName:  book.Name,
+				Quantity:  billDetail.Quantity,
+				Price:     utils.ConvertToVND(billDetail.Price),
+				UnitPrice: utils.ConvertToVND(billDetail.Price / billDetail.Quantity),
+			}
+			billDetails = append(billDetails, billDetailRes)
 			_ = r.cartRepo.DeleteById(cart.ID)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
-
-	return convertBill(bill), nil
+	billRes := convertBill(bill)
+	billRes.BillDetails = billDetails
+	return billRes, nil
 }
 
 func (r billServiceImpl) CancelBill(ctx *gin.Context, id int) (*response.BillRes, error) {
@@ -98,6 +115,7 @@ func (r billServiceImpl) CancelBill(ctx *gin.Context, id int) (*response.BillRes
 	}
 	status := billExisted.Status
 	if status == enum.WAIT_CONFIRM || status == enum.DELIVERY {
+		billExisted.UpdatedDate = time.Now()
 		billExisted.Status = enum.CANCELLED
 		_ = r.billRepo.Update(billExisted)
 		return convertBill(billExisted), nil
@@ -105,28 +123,39 @@ func (r billServiceImpl) CancelBill(ctx *gin.Context, id int) (*response.BillRes
 	if status == enum.CANCELLED {
 		return nil, errors.New("Đơn hàng này đã bị hủy")
 	}
+	if status == enum.DELIVERED {
+		return nil, errors.New("Đơn hàng này đã hoàn thành")
+	}
 	return nil, errors.New("Không thể hủy đơn hàng này")
 }
 
-func (r billServiceImpl) UpdateStatus(ctx *gin.Context, id int, billStatus *request.BillStatusRequest) (*response.BillRes, error) {
+func (r billServiceImpl) UpdateStatus(id int, billStatus *request.BillStatusRequest) (*response.BillRes, error) {
 	billExisted, err := r.billRepo.FindById(id)
 	if err != nil {
 		return nil, err
 	}
+	if billExisted.Status == enum.CANCELLED {
+		return nil, errors.New("Đơn hàng này đã bị hủy, không thể cập nhật được")
+	}
+	if billExisted.Status == enum.DELIVERED {
+		return nil, errors.New("Đơn hàng này đã hoàn thành, không thể cập nhật được")
+	}
 	status := billStatus.Status
 	switch status {
 	case enum.DELIVERY:
-		if billExisted.Status == enum.CANCELLED {
-			return nil, errors.New("Đơn hàng này đã bị hủy, không thể xác nhận được")
-		} else {
-			billExisted.Status = enum.DELIVERY
-			billExisted.ConfirmDate = time.Now()
-			_ = r.billRepo.Update(billExisted)
-			return convertBill(billExisted), nil
+		if billExisted.Status == enum.DELIVERY {
+			return nil, errors.New("Đơn hàng này đang được giao, không thể cập nhật được")
 		}
+		billExisted.Status = enum.DELIVERY
+		billExisted.ConfirmDate = time.Now()
+		_ = r.billRepo.Update(billExisted)
+		return convertBill(billExisted), nil
 	case enum.DELIVERED:
+		if billExisted.Status == enum.WAIT_CONFIRM {
+			return nil, errors.New("Đơn hàng này đang chờ xác nhận, không thể cập nhật được")
+		}
 		billExisted.Status = enum.DELIVERED
-		billExisted.UpdatedAt = time.Now()
+		billExisted.CreatedDate = time.Now()
 		billDetails := r.billDetailRepo.FindByBillId(billExisted.ID)
 		for _, billDetail := range billDetails { // Cập nhật số lượng sách sau khi bán
 			quantity := billDetail.Quantity
@@ -143,6 +172,47 @@ func (r billServiceImpl) UpdateStatus(ctx *gin.Context, id int, billStatus *requ
 	}
 }
 
+func (r billServiceImpl) FindAllByUserId(ctx *gin.Context) ([]response.BillRes, error) {
+	userId := ctx.GetInt("user_id")
+	bills := r.billRepo.FindByUserId(userId)
+	var billResList []response.BillRes
+	for _, bill := range bills {
+		billRes := convertBill(&bill)
+		billId := bill.ID
+		billDetails := r.billDetailRepo.FindByBillId(billId)
+		var billDetailResList []response.BillDetailRes
+		for _, billDetail := range billDetails {
+			billDetailRes := convertBillDetail(&billDetail)
+			book, _ := r.bookRepo.FindById(billDetail.BookID)
+			billDetailRes.BookName = book.Name
+			billDetailResList = append(billDetailResList, *billDetailRes)
+		}
+		billRes.BillDetails = billDetailResList
+		billResList = append(billResList, *billRes)
+	}
+	return billResList, nil
+}
+
+func (r billServiceImpl) FindAll() ([]response.BillRes, error) {
+	bills := r.billRepo.FindAll()
+	var billResList []response.BillRes
+	for _, bill := range bills {
+		billRes := convertBill(&bill)
+		billId := bill.ID
+		billDetails := r.billDetailRepo.FindByBillId(billId)
+		var billDetailResList []response.BillDetailRes
+		for _, billDetail := range billDetails {
+			billDetailRes := convertBillDetail(&billDetail)
+			book, _ := r.bookRepo.FindById(billDetail.BookID)
+			billDetailRes.BookName = book.Name
+			billDetailResList = append(billDetailResList, *billDetailRes)
+		}
+		billRes.BillDetails = billDetailResList
+		billResList = append(billResList, *billRes)
+	}
+	return billResList, nil
+}
+
 func convertBill(bill *model.Bill) *response.BillRes {
 	billRes := &response.BillRes{
 		ID:          bill.ID,
@@ -154,17 +224,32 @@ func convertBill(bill *model.Bill) *response.BillRes {
 		Total:       utils.ConvertToVND(bill.Total),
 		Status:      bill.Status,
 		Payment:     bill.Payment,
-		ConfirmDate: bill.ConfirmDate,
+		CreatedDate: utils.ConvertTimetoString(bill.CreatedDate),
 	}
 	switch bill.Status {
 	case enum.WAIT_CONFIRM:
 		billRes.Status = "Chờ xác nhận"
 	case enum.DELIVERY:
 		billRes.Status = "Đang giao hàng"
+		billRes.ConfirmDate = utils.ConvertTimetoString(bill.ConfirmDate)
 	case enum.DELIVERED:
 		billRes.Status = "Đã giao hàng"
+		billRes.ConfirmDate = utils.ConvertTimetoString(bill.ConfirmDate)
+		billRes.UpdatedDate = utils.ConvertTimetoString(bill.UpdatedDate)
 	case enum.CANCELLED:
 		billRes.Status = "Đã hủy"
+		billRes.UpdatedDate = utils.ConvertTimetoString(bill.UpdatedDate)
 	}
 	return billRes
+}
+
+func convertBillDetail(billDetail *model.BillDetail) *response.BillDetailRes {
+	billDetailRes := &response.BillDetailRes{
+		ID:        billDetail.ID,
+		BookID:    billDetail.BookID,
+		Quantity:  billDetail.Quantity,
+		Price:     utils.ConvertToVND(billDetail.Price),
+		UnitPrice: utils.ConvertToVND(billDetail.Price / billDetail.Quantity),
+	}
+	return billDetailRes
 }

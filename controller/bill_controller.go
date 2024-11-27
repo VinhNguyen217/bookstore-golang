@@ -13,6 +13,8 @@ type BillController interface {
 	Create(ctx *gin.Context)
 	CancelBill(ctx *gin.Context)
 	UpdateStatusBill(ctx *gin.Context)
+	FindByUser(ctx *gin.Context)
+	FindAll(ctx *gin.Context)
 }
 
 type billCtl struct {
@@ -33,7 +35,7 @@ func (c *billCtl) Create(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusCreated, gin.H{"data": bill})
+	ctx.JSON(http.StatusCreated, gin.H{"message": "Tạo đơn hàng thành công", "data": bill})
 }
 
 func (c *billCtl) CancelBill(ctx *gin.Context) {
@@ -58,10 +60,28 @@ func (c *billCtl) UpdateStatusBill(ctx *gin.Context) {
 	}
 	billStatusReq := &request.BillStatusRequest{}
 	_ = ctx.ShouldBindJSON(billStatusReq)
-	bill, err := c.billService.UpdateStatus(ctx, id, billStatusReq)
+	bill, err := c.billService.UpdateStatus(id, billStatusReq)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusCreated, gin.H{"message": "Cập nhật đơn hàng thành công", "data": bill})
+}
+
+func (c *billCtl) FindByUser(ctx *gin.Context) {
+	billResList, err := c.billService.FindAllByUserId(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{"data": billResList})
+}
+
+func (c *billCtl) FindAll(ctx *gin.Context) {
+	billResList, err := c.billService.FindAll()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{"data": billResList})
 }

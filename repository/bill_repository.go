@@ -12,6 +12,8 @@ type BillRepository interface {
 	FindByIdAndUserId(id, userId int) (*model.Bill, error)
 	Update(bill *model.Bill) error
 	FindById(id int) (*model.Bill, error)
+	FindByUserId(userId int) []model.Bill
+	FindAll() []model.Bill
 }
 
 type billRepo struct {
@@ -54,4 +56,17 @@ func (r billRepo) FindById(id int) (*model.Bill, error) {
 	} else {
 		return &bill, nil
 	}
+}
+
+func (r billRepo) FindByUserId(userId int) []model.Bill {
+	var bills []model.Bill
+	r.db.Where("user_id = ?", userId).
+		Find(&bills)
+	return bills
+}
+
+func (r billRepo) FindAll() []model.Bill {
+	var bills []model.Bill
+	_ = r.db.Find(&bills)
+	return bills
 }

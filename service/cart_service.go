@@ -120,9 +120,10 @@ func (c cartServiceImpl) Update(ctx *gin.Context, req *request.CartItemUpdateReq
 
 func convertCart(cart *model.Cart) *response.CartRes {
 	return &response.CartRes{
-		ID:       cart.ID,
-		BookID:   cart.BookID,
-		Quantity: cart.Quantity,
-		Price:    utils.ConvertToVND(cart.Price),
+		ID:        cart.ID,
+		BookID:    cart.BookID,
+		Quantity:  cart.Quantity,
+		Price:     utils.ConvertToVND(cart.Price),
+		UnitPrice: utils.ConvertToVND(cart.Price / cart.Quantity),
 	}
 }
