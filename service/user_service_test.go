@@ -25,7 +25,7 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	// user existed
-	_, err := userService.CreateUser(&request.UserRequest{Username: "user-existed"})
+	_, err := userService.CreateUser(&request.UserRequest{Username: "user-existed", Password: "123456789"})
 	if err == nil {
 		t.Fail()
 	}

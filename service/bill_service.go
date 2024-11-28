@@ -10,6 +10,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/do"
+	"strings"
 	"time"
 )
 
@@ -41,6 +42,15 @@ func (r billServiceImpl) Create(ctx *gin.Context, req *request.BillRequest) (*re
 	cartIds := req.CartIds
 	if len(cartIds) == 0 {
 		return nil, errors.New("Yêu cầu nhập danh sách giỏ hàng")
+	}
+	if strings.TrimSpace(req.Receiver) == "" {
+		return nil, errors.New("Receiver is required")
+	}
+	if strings.TrimSpace(req.Address) == "" {
+		return nil, errors.New("Address is required")
+	}
+	if strings.TrimSpace(req.Phone) == "" {
+		return nil, errors.New("Phone is required")
 	}
 
 	userId := ctx.GetInt("user_id")
