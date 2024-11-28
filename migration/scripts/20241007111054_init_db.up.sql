@@ -52,12 +52,12 @@ CREATE TABLE `bills`
     `address`      longtext,
     `email`        longtext,
     `note`         longtext,
-    `total`        bigint DEFAULT NULL,
+    `total`        bigint    DEFAULT NULL,
     `status`       longtext,
     `payment`      longtext,
-    `confirm_date` datetime(3) DEFAULT NULL,
-    `created_date`   datetime(3) DEFAULT NULL,
-    `updated_date`   datetime(3) DEFAULT NULL,
+    `confirm_date` longtext DEFAULT NULL,
+    `created_date` longtext DEFAULT NULL,
+    `updated_date` longtext DEFAULT NULL,
     PRIMARY KEY (`id`)
 );
 CREATE TABLE `bill_detail`

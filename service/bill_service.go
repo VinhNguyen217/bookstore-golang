@@ -55,7 +55,7 @@ func (r billServiceImpl) Create(ctx *gin.Context, req *request.BillRequest) (*re
 			carts = append(carts, *cart)
 		}
 	}
-	// Create bill
+	// Create
 	bill := &model.Bill{
 		Receiver: req.Receiver,
 		UserId:   userId,
@@ -64,11 +64,12 @@ func (r billServiceImpl) Create(ctx *gin.Context, req *request.BillRequest) (*re
 		Email:    req.Email,
 		Note:     req.Note,
 		Total:    total,
-		ConfirmDate: time.Date(0001, 2, 1,
-			00, 00, 00, 00, time.UTC),
-		CreatedDate: time.Now(),
-		UpdatedDate: time.Date(0001, 2, 1,
-			00, 00, 00, 00, time.UTC),
+		//ConfirmDate: time.Date(0001, 2, 1,
+		//	00, 00, 00, 00, time.UTC),
+		//CreatedDate: time.Now(),
+		CreatedDate: time.Now().UTC().Format("2006-01-02 15:04:05"),
+		//UpdatedDate: time.Date(0001, 2, 1,
+		//	00, 00, 00, 00, time.UTC),
 		Status:  enum.WAIT_CONFIRM,
 		Payment: enum.CASH,
 	}
@@ -115,7 +116,8 @@ func (r billServiceImpl) CancelBill(ctx *gin.Context, id int) (*response.BillRes
 	}
 	status := billExisted.Status
 	if status == enum.WAIT_CONFIRM || status == enum.DELIVERY {
-		billExisted.UpdatedDate = time.Now()
+		//billExisted.UpdatedDate = time.Now()
+		billExisted.UpdatedDate = time.Now().UTC().Format("2006-01-02 15:04:05")
 		billExisted.Status = enum.CANCELLED
 		_ = r.billRepo.Update(billExisted)
 		return convertBill(billExisted), nil
@@ -147,7 +149,8 @@ func (r billServiceImpl) UpdateStatus(id int, billStatus *request.BillStatusRequ
 			return nil, errors.New("Đơn hàng này đang được giao, không thể cập nhật được")
 		}
 		billExisted.Status = enum.DELIVERY
-		billExisted.ConfirmDate = time.Now()
+		//billExisted.ConfirmDate = time.Now()
+		billExisted.ConfirmDate = time.Now().UTC().Format("2006-01-02 15:04:05")
 		_ = r.billRepo.Update(billExisted)
 		return convertBill(billExisted), nil
 	case enum.DELIVERED:
@@ -155,7 +158,8 @@ func (r billServiceImpl) UpdateStatus(id int, billStatus *request.BillStatusRequ
 			return nil, errors.New("Đơn hàng này đang chờ xác nhận, không thể cập nhật được")
 		}
 		billExisted.Status = enum.DELIVERED
-		billExisted.CreatedDate = time.Now()
+		//billExisted.CreatedDate = time.Now()
+		billExisted.UpdatedDate = time.Now().UTC().Format("2006-01-02 15:04:05")
 		billDetails := r.billDetailRepo.FindByBillId(billExisted.ID)
 		for _, billDetail := range billDetails { // Cập nhật số lượng sách sau khi bán
 			quantity := billDetail.Quantity
@@ -224,21 +228,21 @@ func convertBill(bill *model.Bill) *response.BillRes {
 		Total:       utils.ConvertToVND(bill.Total),
 		Status:      bill.Status,
 		Payment:     bill.Payment,
-		CreatedDate: utils.ConvertTimetoString(bill.CreatedDate),
+		CreatedDate: bill.CreatedDate,
 	}
 	switch bill.Status {
 	case enum.WAIT_CONFIRM:
 		billRes.Status = "Chờ xác nhận"
 	case enum.DELIVERY:
 		billRes.Status = "Đang giao hàng"
-		billRes.ConfirmDate = utils.ConvertTimetoString(bill.ConfirmDate)
+		billRes.ConfirmDate = bill.ConfirmDate
 	case enum.DELIVERED:
 		billRes.Status = "Đã giao hàng"
-		billRes.ConfirmDate = utils.ConvertTimetoString(bill.ConfirmDate)
-		billRes.UpdatedDate = utils.ConvertTimetoString(bill.UpdatedDate)
+		billRes.ConfirmDate = bill.ConfirmDate
+		billRes.UpdatedDate = bill.UpdatedDate
 	case enum.CANCELLED:
 		billRes.Status = "Đã hủy"
-		billRes.UpdatedDate = utils.ConvertTimetoString(bill.UpdatedDate)
+		billRes.UpdatedDate = bill.UpdatedDate
 	}
 	return billRes
 }
